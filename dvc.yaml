@@ -90,7 +90,7 @@ stages:
         cache: false
 
   calibrate_detector:
-    cmd: .venv/bin/python scripts/calibrate_detector.py --experiment 
+    cmd: .venv/bin/python scripts/calibrate_detector.py --experiment
       experiments/yolo/yolo11n_200e
     deps:
     - scripts/calibrate_detector.py
@@ -104,22 +104,32 @@ stages:
     - experiments/yolo/yolo11n_200e/detector_calibration_metrics.json:
         cache: false
 
-params:
-- dvclive/params.yaml
-metrics:
-- dvclive/metrics.json
-plots:
-- dvclive/plots/metrics:
-    x: step
-- dvclive/plots/images
-- dvclive/plots/sklearn/cf.json:
-    template: confusion_normalized
-    x: actual
-    y: predicted
-    title: Confusion Matrix
-    x_label: True Label
-    y_label: Predicted Label
-artifacts:
-  best:
-    path: dvclive/artifacts/best.pt
-    type: model
+  evaluate:
+    cmd: .venv/bin/python scripts/evaluate.py
+      --classifier-dir experiments/binary_classifier/efficientnet_b1
+      --output metrics/evaluation_report.json
+    deps:
+    - scripts/evaluate.py
+    - src/allium_cepa_classifier/training/model_builder.py
+    - src/allium_cepa_classifier/config/experiment_config.py
+    - experiments/binary_classifier/efficientnet_b1/config.yaml
+    - experiments/binary_classifier/efficientnet_b1/weights/classifier_calibrated.pt
+    - experiments/yolo/yolo11n_200e/weights/object_detection.pt
+    - experiments/yolo/yolo11n_200e/weights/yolo_isotonic_calibrator.pkl
+    - datasets/crops/binary_classifier/test
+    metrics:
+    - metrics/evaluation_report.json:
+        cache: false
+
+  validate_model:
+    cmd: .venv/bin/python -m allium_cepa_classifier.validation.validate_model
+      --report metrics/evaluation_report.json
+      --output validation_result.json
+    deps:
+    - src/allium_cepa_classifier/validation/validate_model.py
+    - src/allium_cepa_classifier/config/validation_config.py
+    - src/allium_cepa_classifier/providers/
+    - metrics/evaluation_report.json
+    outs:
+    - validation_result.json:
+        cache: false

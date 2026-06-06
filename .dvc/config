@@ -4,3 +4,8 @@
     url = https://huggingface.co/datasets/GIAR-UTN/allium-cepa-dvc-cache/resolve/main
 ['remote "weights"']
     url = https://huggingface.co/GIAR-UTN/allium-cepa-automation/resolve/main
+['remote "local_minio"']
+    url = s3://allium-cepa-ml
+    endpointurl = http://localhost:9000
+['remote "production"']
+    url = s3://allium-cepa-ml

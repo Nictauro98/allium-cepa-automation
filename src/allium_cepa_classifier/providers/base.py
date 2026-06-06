@@ -1,0 +1,13 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Protocol
+
+
+class StorageProvider(Protocol):
+    """Minimal object-store interface. Paths are bucket-relative keys."""
+
+    def get_file(self, key: str, local_path: Path) -> Path: ...
+    def put_file(self, local_path: Path, key: str) -> None: ...
+    def exists(self, key: str) -> bool: ...
+    def read_text(self, key: str) -> str: ...
