@@ -13,6 +13,7 @@ import shutil
 from pathlib import Path
 
 from allium_cepa_classifier.config.detector_config import DetectorConfig
+from allium_cepa_classifier.training.mlflow_logging import run as mlflow_run
 
 
 def _extract_metrics(yolo_run_dir: Path) -> dict:
@@ -74,51 +75,72 @@ def main():
 
     settings.update({"tensorboard": cfg.tensorboard})
 
-    model = YOLO(str(cfg.weights))
-    model.train(
-        data=str(cfg.data),
-        epochs=cfg.epochs,
-        imgsz=cfg.imgsz,
-        device=cfg.device,
-        project=str(run_dir),
-        name="yolo",
-        exist_ok=True,
-    )
-    model.val(
-        split="val",
-        imgsz=cfg.imgsz,
-        batch=16,
-        conf=0.001,
-        iou=0.7,
-        plots=True,
-        project=str(run_dir),
-        name="yolo",
-        exist_ok=True,
-    )
+    with mlflow_run(run_name="detector_yolo") as mlctx:
+        mlctx.log_params({
+            "weights": str(cfg.weights),
+            "epochs": cfg.epochs,
+            "imgsz": cfg.imgsz,
+            "device": cfg.device,
+        })
+        mlctx.log_artifact(args.config)
 
-    yolo_run_dir = run_dir / "yolo"
+        model = YOLO(str(cfg.weights))
+        model.train(
+            data=str(cfg.data),
+            epochs=cfg.epochs,
+            imgsz=cfg.imgsz,
+            device=cfg.device,
+            project=str(run_dir),
+            name="yolo",
+            exist_ok=True,
+        )
+        model.val(
+            split="val",
+            imgsz=cfg.imgsz,
+            batch=16,
+            conf=0.001,
+            iou=0.7,
+            plots=True,
+            project=str(run_dir),
+            name="yolo",
+            exist_ok=True,
+        )
 
-    best_pt = yolo_run_dir / "weights" / "best.pt"
-    if best_pt.exists():
-        shutil.copy(best_pt, run_dir / "weights" / "object_detection.pt")
-        cfg.out.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(best_pt, cfg.out)
+        yolo_run_dir = run_dir / "yolo"
 
-    for png in yolo_run_dir.glob("*.png"):
-        shutil.copy(png, run_dir / "plots" / png.name)
+        best_pt = yolo_run_dir / "weights" / "best.pt"
+        if best_pt.exists():
+            shutil.copy(best_pt, run_dir / "weights" / "object_detection.pt")
+            cfg.out.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(best_pt, cfg.out)
 
-    metrics = _extract_metrics(yolo_run_dir)
-    (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2))
+        for png in yolo_run_dir.glob("*.png"):
+            shutil.copy(png, run_dir / "plots" / png.name)
+
+        metrics = _extract_metrics(yolo_run_dir)
+        (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2))
+
+        yolo_metrics = {k: v for k, v in metrics.items() if isinstance(v, float)}
+        if yolo_metrics:
+            mlctx.log_metrics(yolo_metrics)
+        mlctx.log_artifact(run_dir / "weights" / "object_detection.pt")
+
+        if not args.no_calibrate:
+            from allium_cepa_classifier.training.detector_calibrator import (
+                run_detection_calibration,
+            )
+
+            logging.info("\n--- Calibration ---")
+            cal_metrics = run_detection_calibration(run_dir)
+            mlctx.log_metrics({
+                "ece_before": cal_metrics["ece_before"],
+                "ece_after": cal_metrics["ece_after"],
+            })
+            mlctx.log_artifact(run_dir / "weights" / "yolo_isotonic_calibrator.pkl")
+            print(f"ECE before: {cal_metrics['ece_before']:.4f}  after: {cal_metrics['ece_after']:.4f}")
 
     print(f"\nDone. Artifacts in: {run_dir}")
     print(f"Detector weights copied to: {cfg.out}")
-
-    if not args.no_calibrate:
-        from allium_cepa_classifier.training.detector_calibrator import run_detection_calibration
-
-        logging.info("\n--- Calibration ---")
-        cal_metrics = run_detection_calibration(run_dir)
-        print(f"ECE before: {cal_metrics['ece_before']:.4f}  after: {cal_metrics['ece_after']:.4f}")
 
 
 if __name__ == "__main__":

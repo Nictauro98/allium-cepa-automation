@@ -10,6 +10,7 @@ import logging
 from pathlib import Path
 
 from allium_cepa_classifier.config.experiment_config import ExperimentConfig
+from allium_cepa_classifier.training.mlflow_logging import run as mlflow_run
 from allium_cepa_classifier.training.trainer import run_training
 
 
@@ -52,17 +53,40 @@ def main():
         print(f"Trainable params: {trainable:,} / {total:,}")
         return
 
-    metrics = run_training(cfg, run_dir)
+    with mlflow_run(run_name=f"classifier_{cfg.model.arch}") as mlctx:
+        mlctx.log_params({
+            "arch": cfg.model.arch,
+            "lr": cfg.training.lr,
+            "batch_size": cfg.data.batch_size,
+            "epochs": cfg.training.epochs,
+            "freeze_stages": cfg.model.freeze_stages,
+        })
+        mlctx.log_artifact(args.config)
+
+        metrics = run_training(cfg, run_dir)
+        mlctx.log_metrics({
+            "train_acc": metrics["train_acc"],
+            "val_acc": metrics["val_acc"],
+            "test_acc": metrics["test_acc"],
+            "best_val_loss": metrics["best_val_loss"],
+        })
+        mlctx.log_artifact(run_dir / "weights" / "classifier.pt")
+
+        if not args.no_calibrate:
+            from allium_cepa_classifier.training.calibrator import run_calibration
+
+            logging.info("\n--- Calibration ---")
+            cal_metrics = run_calibration(run_dir)
+            mlctx.log_metrics({
+                "ece_before": cal_metrics["ece_before"],
+                "ece_after": cal_metrics["ece_after"],
+            })
+            mlctx.log_artifact(run_dir / "weights" / "classifier_calibrated.pt")
+            print(f"ECE before: {cal_metrics['ece_before']:.4f}  after: {cal_metrics['ece_after']:.4f}")
+            print(f"Temperature: {cal_metrics['temperature']}")
+
     print(f"\nDone. Artifacts in: {run_dir}")
     print(f"Test accuracy: {metrics['test_acc']:.4f}")
-
-    if not args.no_calibrate:
-        from allium_cepa_classifier.training.calibrator import run_calibration
-
-        logging.info("\n--- Calibration ---")
-        cal_metrics = run_calibration(run_dir)
-        print(f"ECE before: {cal_metrics['ece_before']:.4f}  after: {cal_metrics['ece_after']:.4f}")
-        print(f"Temperature: {cal_metrics['temperature']}")
 
 
 if __name__ == "__main__":
