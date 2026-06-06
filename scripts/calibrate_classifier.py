@@ -1,6 +1,6 @@
 """
 Usage:
-    uv run python scripts/calibrate.py --experiment experiments/20260502-153000_efficientnet_b1_baseline
+    uv run python scripts/calibrate_classifier.py --experiment experiments/20260502-153000_efficientnet_b1_baseline
 """
 
 import argparse
