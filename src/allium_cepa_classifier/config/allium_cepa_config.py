@@ -19,3 +19,4 @@ class AlliumCepaConfig(BaseConfig):
     image_size: tuple[int, int] = (200, 200)
     batch_size: int = 32
     use_cpu: bool = False
+    use_registry: bool = False

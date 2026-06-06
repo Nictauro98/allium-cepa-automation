@@ -81,9 +81,17 @@ def main():
                 "ece_before": cal_metrics["ece_before"],
                 "ece_after": cal_metrics["ece_after"],
             })
-            mlctx.log_artifact(run_dir / "weights" / "classifier_calibrated.pt")
+            # Log under a stable subdir so it can be registered in the MLflow Model Registry
+            mlctx.log_model_file(
+                run_dir / "weights" / "classifier_calibrated.pt",
+                "calibrated_classifier",
+            )
             print(f"ECE before: {cal_metrics['ece_before']:.4f}  after: {cal_metrics['ece_after']:.4f}")
             print(f"Temperature: {cal_metrics['temperature']}")
+
+    # Persist the run_id so promote_model.py can register this version later
+    if mlctx.run_id is not None:
+        (run_dir / "mlflow_run_id.txt").write_text(mlctx.run_id)
 
     print(f"\nDone. Artifacts in: {run_dir}")
     print(f"Test accuracy: {metrics['test_acc']:.4f}")
