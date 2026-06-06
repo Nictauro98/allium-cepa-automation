@@ -51,7 +51,7 @@ class TestGetStorage:
             storage = get_storage()
 
         call_kwargs = mock_fs.call_args
-        assert call_kwargs[1]["client_kwargs"] == {}
+        assert "client_kwargs" not in call_kwargs[1]
 
     def test_bucket_name_from_env(self, monkeypatch):
         monkeypatch.setenv("ALLIUM_BUCKET", "my-custom-bucket")

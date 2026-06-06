@@ -6,14 +6,24 @@ import fsspec
 
 
 class FsspecStorage:
-    """Single impl for local/MinIO/S3 — differs only by endpoint_url."""
+    """Single impl for local/MinIO/S3 — differs only by endpoint_url and credentials."""
 
-    def __init__(self, bucket: str, endpoint_url: str | None = None):
+    def __init__(
+        self,
+        bucket: str,
+        endpoint_url: str | None = None,
+        key: str | None = None,
+        secret: str | None = None,
+    ):
         self.bucket = bucket
-        self.fs = fsspec.filesystem(
-            "s3",
-            client_kwargs={"endpoint_url": endpoint_url} if endpoint_url else {},
-        )
+        kwargs: dict = {}
+        if key is not None:
+            kwargs["key"] = key
+        if secret is not None:
+            kwargs["secret"] = secret
+        if endpoint_url is not None:
+            kwargs["client_kwargs"] = {"endpoint_url": endpoint_url}
+        self.fs = fsspec.filesystem("s3", **kwargs)
 
     def _key(self, key: str) -> str:
         return f"{self.bucket}/{key}"
