@@ -1,9 +1,9 @@
 stages:
 
   download_dataset:
-    cmd: .venv/bin/python scripts/utils/download_hf_dataset.py
-      --rev 6816e6da9c014d6249b3c36e89d93000792037a5
-      --out datasets/allium_cepa_full_images_merged
+    cmd: .venv/bin/python scripts/utils/download_hf_dataset.py --rev 
+      6816e6da9c014d6249b3c36e89d93000792037a5 --out 
+      datasets/allium_cepa_full_images_merged
     deps:
     - scripts/utils/download_hf_dataset.py
     outs:
@@ -28,48 +28,6 @@ stages:
     outs:
     - datasets/crops/binary_classifier
 
-  train_classifier:
-    foreach: [efficientnet_b1, efficientnet_b2, resnet50, vgg19]
-    do:
-      cmd: .venv/bin/python scripts/train_classifier.py --config 
-        experiments/binary_classifier/${item}/config.yaml --no-calibrate
-      deps:
-      - scripts/train_classifier.py
-      - src/allium_cepa_classifier/training/
-      - src/allium_cepa_classifier/config/
-      - datasets/crops/binary_classifier
-      - experiments/binary_classifier/${item}/config.yaml
-      params:
-      - experiments/binary_classifier/${item}/config.yaml:
-        - model
-        - training
-        - data
-      outs:
-      - experiments/binary_classifier/${item}/weights/classifier.pt
-      - experiments/binary_classifier/${item}/plots/training_curves.png
-      - experiments/binary_classifier/${item}/plots/confusion_matrix.png
-      - experiments/binary_classifier/${item}/plots/classification_report.txt
-      metrics:
-      - experiments/binary_classifier/${item}/metrics.json:
-          cache: false
-
-  calibrate_classifier:
-    foreach: [efficientnet_b1, efficientnet_b2, resnet50, vgg19]
-    do:
-      cmd: .venv/bin/python scripts/calibrate_classifier.py --experiment 
-        experiments/binary_classifier/${item}
-      deps:
-      - scripts/calibrate_classifier.py
-      - src/allium_cepa_classifier/training/calibrator.py
-      - experiments/binary_classifier/${item}/weights/classifier.pt
-      - datasets/crops/binary_classifier/validation
-      outs:
-      - experiments/binary_classifier/${item}/weights/classifier_calibrated.pt
-      - experiments/binary_classifier/${item}/plots/reliability_diagram.png
-      metrics:
-      - experiments/binary_classifier/${item}/calibration_metrics.json:
-          cache: false
-
   train_detector:
     cmd: .venv/bin/python scripts/train_detector.py --config 
       experiments/yolo/yolo11n_200e/config.yaml --no-calibrate
@@ -90,7 +48,7 @@ stages:
         cache: false
 
   calibrate_detector:
-    cmd: .venv/bin/python scripts/calibrate_detector.py --experiment
+    cmd: .venv/bin/python scripts/calibrate_detector.py --experiment 
       experiments/yolo/yolo11n_200e
     deps:
     - scripts/calibrate_detector.py
@@ -105,26 +63,25 @@ stages:
         cache: false
 
   evaluate:
-    cmd: .venv/bin/python scripts/evaluate.py
-      --classifier-dir experiments/binary_classifier/efficientnet_b1
-      --output metrics/evaluation_report.json
+    cmd: .venv/bin/python scripts/evaluate.py --classifier-dir 
+      experiments/binary_classifier/${champion_classifier} --output 
+      metrics/evaluation_report.json
     deps:
     - scripts/evaluate.py
     - src/allium_cepa_classifier/training/model_builder.py
     - src/allium_cepa_classifier/config/experiment_config.py
-    - experiments/binary_classifier/efficientnet_b1/config.yaml
-    - experiments/binary_classifier/efficientnet_b1/weights/classifier_calibrated.pt
-    - experiments/yolo/yolo11n_200e/weights/object_detection.pt
-    - experiments/yolo/yolo11n_200e/weights/yolo_isotonic_calibrator.pkl
+    - experiments/binary_classifier/${champion_classifier}/weights/classifier_calibrated.pt
     - datasets/crops/binary_classifier/test
+    params:
+    - params.yaml:
+      - champion_classifier
     metrics:
     - metrics/evaluation_report.json:
         cache: false
 
   validate_model:
-    cmd: .venv/bin/python -m allium_cepa_classifier.validation.validate_model
-      --report metrics/evaluation_report.json
-      --output validation_result.json
+    cmd: .venv/bin/python -m allium_cepa_classifier.validation.validate_model 
+      --report metrics/evaluation_report.json --output validation_result.json
     deps:
     - src/allium_cepa_classifier/validation/validate_model.py
     - src/allium_cepa_classifier/config/validation_config.py
@@ -133,3 +90,22 @@ stages:
     outs:
     - validation_result.json:
         cache: false
+params:
+- dvclive/params.yaml
+metrics:
+- dvclive/metrics.json
+plots:
+- dvclive/plots/metrics:
+    x: step
+- dvclive/plots/images
+- dvclive/plots/sklearn/cf.json:
+    template: confusion_normalized
+    x: actual
+    y: predicted
+    title: Confusion Matrix
+    x_label: True Label
+    y_label: Predicted Label
+artifacts:
+  best:
+    path: dvclive/artifacts/best.pt
+    type: model

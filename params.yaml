@@ -1,0 +1,3 @@
+# Champion model used by the evaluate + validate_model DVC stages.
+# Update this to promote a new model, then run: dvc repro evaluate validate_model
+champion_classifier: efficientnet_b2_20e
