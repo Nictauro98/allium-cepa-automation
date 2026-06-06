@@ -182,6 +182,7 @@ def run_calibration(run_dir: Path) -> dict:
             "model_state_dict": calibrated_model.state_dict(),
             "temperature": optimal_T.tolist(),
             "num_classes": num_classes,
+            "timm_model_name": ckpt.get("timm_model_name", cfg.model.arch),
             "image_size": image_size,
             "class_to_idx": ckpt["class_to_idx"],
             "normalize_mean": normalize_mean,

@@ -5,6 +5,13 @@ Evaluate the calibrated classifier on the fixed test split.
 Produces metrics/evaluation_report.json with Macro F1, per-class F1,
 accuracy, ECE, and sample count — the inputs the validate_model gate reads.
 
+Usage (experiment directory — requires config.yaml alongside weights):
+  python scripts/evaluate.py --classifier-dir experiments/binary_classifier/efficientnet_b1
+
+Usage (direct weights file — arch read from checkpoint; pass --arch for pre-Plan-A weights):
+  python scripts/evaluate.py --weights src/allium_cepa_classifier/weights/classifier_calibrated.pt
+  python scripts/evaluate.py --weights <path>.pt --arch efficientnet_b2
+
 Test set source: datasets/crops/binary_classifier/test (ImageFolder).
 Future (Plan D): swap for s3://dataset/test_fixed/ via the storage provider.
 """
@@ -21,14 +28,14 @@ from sklearn.metrics import accuracy_score, f1_score
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
-from allium_cepa_classifier.config.experiment_config import ExperimentConfig
+from allium_cepa_classifier.config.experiment_config import ExperimentConfig, ModelConfig
 from allium_cepa_classifier.training.model_builder import build_model
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
 _ROOT = Path(__file__).resolve().parents[1]
-_DEFAULT_CLASSIFIER_DIR = _ROOT / "experiments/binary_classifier/efficientnet_b1"
+_DEFAULT_CLASSIFIER_DIR = _ROOT / "experiments/binary_classifier/efficientnet_b2"
 _DEFAULT_TEST_DIR = _ROOT / "datasets/crops/binary_classifier/test"
 
 
@@ -47,17 +54,26 @@ def _ece(probs: np.ndarray, labels: np.ndarray, n_bins: int = 10) -> float:
 
 
 def load_calibrated_classifier(
-    experiment_dir: Path, device: torch.device
+    weights_path: Path,
+    device: torch.device,
+    arch: str | None = None,
 ) -> tuple[torch.nn.Module, torch.Tensor, dict]:
-    """Load calibrated BackboneWithHead + temperature from an experiment directory."""
-    cfg = ExperimentConfig.from_yaml(experiment_dir / "config.yaml")
-    ckpt = torch.load(
-        experiment_dir / "weights" / "classifier_calibrated.pt",
-        map_location=device,
-        weights_only=False,
-    )
+    """Load calibrated BackboneWithHead + temperature from a .pt file.
 
-    model = build_model(cfg.model).to(device)
+    arch is read from the checkpoint when present (stored by calibrator.py >= Plan A).
+    Pass arch explicitly for older weights that pre-date this metadata field.
+    """
+    ckpt = torch.load(weights_path, map_location=device, weights_only=False)
+
+    resolved_arch = arch or ckpt.get("timm_model_name")
+    if resolved_arch is None:
+        raise ValueError(
+            f"Checkpoint {weights_path} does not contain 'timm_model_name'. "
+            "Pass --arch <arch> explicitly (e.g. --arch efficientnet_b2)."
+        )
+
+    model = build_model(ModelConfig(arch=resolved_arch)).to(device)
+
     # CalibratedClassifier wraps BackboneWithHead, so state dict keys are base_model.*
     base_state = {
         k[len("base_model.") :]: v
@@ -71,11 +87,11 @@ def load_calibrated_classifier(
     return model, temperature, ckpt
 
 
-def run_evaluation(experiment_dir: Path, test_dir: Path) -> dict:
+def run_evaluation(weights_path: Path, test_dir: Path, arch: str | None = None) -> dict:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     log.info(f"Device: {device}")
 
-    model, temperature, ckpt = load_calibrated_classifier(experiment_dir, device)
+    model, temperature, ckpt = load_calibrated_classifier(weights_path, device, arch=arch)
 
     image_size = tuple(ckpt.get("image_size", (224, 224)))
     mean = ckpt.get("normalize_mean", [0.485, 0.456, 0.406])
@@ -125,19 +141,55 @@ def run_evaluation(experiment_dir: Path, test_dir: Path) -> dict:
     }
 
 
+def _resolve_weights(args: argparse.Namespace) -> tuple[Path, str | None]:
+    """Return (weights_path, arch_hint) from parsed args."""
+    if args.weights:
+        return Path(args.weights), args.arch
+
+    classifier_dir = Path(args.classifier_dir)
+    weights = classifier_dir / "weights" / "classifier_calibrated.pt"
+    # Try to read arch from config.yaml if present (pre-Plan-A checkpoint without timm_model_name)
+    config_path = classifier_dir / "config.yaml"
+    arch_hint = args.arch
+    if arch_hint is None and config_path.exists():
+        try:
+            cfg = ExperimentConfig.from_yaml(config_path)
+            arch_hint = cfg.model.arch
+        except Exception:
+            pass
+    return weights, arch_hint
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate calibrated classifier on test split.")
-    parser.add_argument(
+
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument(
         "--classifier-dir",
         type=Path,
         default=_DEFAULT_CLASSIFIER_DIR,
-        help="Experiment directory containing config.yaml and weights/classifier_calibrated.pt",
+        help="Experiment directory containing weights/classifier_calibrated.pt (and optionally config.yaml)",
+    )
+    source.add_argument(
+        "--weights",
+        type=Path,
+        default=None,
+        help="Direct path to a classifier_calibrated.pt file",
+    )
+
+    parser.add_argument(
+        "--arch",
+        type=str,
+        default=None,
+        help="Override timm model arch (e.g. efficientnet_b2). Required for pre-Plan-A weights "
+        "that do not embed 'timm_model_name' in the checkpoint.",
     )
     parser.add_argument("--test-dir", type=Path, default=_DEFAULT_TEST_DIR)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
-    report = run_evaluation(args.classifier_dir, args.test_dir)
+    weights_path, arch = _resolve_weights(args)
+    report = run_evaluation(weights_path, args.test_dir, arch=arch)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2))
