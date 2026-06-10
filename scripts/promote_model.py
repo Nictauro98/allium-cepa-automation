@@ -102,6 +102,25 @@ def main() -> None:
     except Exception:
         log.info("Registered model already exists: %s", _MODEL_NAME)
 
+    # Ensure the run has a proper MLmodel artifact (runs trained before this fix only
+    # logged a plain .pt file via log_artifact, which register_model cannot use).
+    artifacts = [a.path for a in client.list_artifacts(run_id, "calibrated_classifier")]
+    if "calibrated_classifier/MLmodel" not in artifacts:
+        log.info("No MLmodel found in run — re-logging weights as pyfunc model.")
+        weights_path = exp_dir / "weights" / "classifier_calibrated.pt"
+
+        class _CalibratedCheckpointModel(mlflow.pyfunc.PythonModel):
+            def predict(self, context, model_input):  # noqa: ARG002
+                raise NotImplementedError("Load via AlliumCepaModel, not MLflow pyfunc.")
+
+        with mlflow.start_run(run_id=run_id):
+            mlflow.pyfunc.log_model(
+                artifact_path="calibrated_classifier",
+                python_model=_CalibratedCheckpointModel(),
+                artifacts={"weights": str(weights_path)},
+            )
+        log.info("MLmodel artifact logged into run %s.", run_id)
+
     version = mlflow.register_model(model_uri, _MODEL_NAME)
     log.info("Registered version: %s", version.version)
 
