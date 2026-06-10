@@ -822,5 +822,5 @@ stages:
     outs:
     - path: validation_result.json
       hash: md5
-      md5: 08328e22e37fbdddb339efc5b42a77b3
-      size: 391
+      md5: 941a758e42365eb8c3cae149bbd9d73f
+      size: 555
