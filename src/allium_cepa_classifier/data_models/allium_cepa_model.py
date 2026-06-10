@@ -14,8 +14,12 @@ from ultralytics import YOLO
 
 from allium_cepa_classifier.config import AlliumCepaConfig
 from allium_cepa_classifier.training.detector_calibrator import ObjectDetectionCalibrator
+from allium_cepa_classifier.training.mlflow_logging import _is_enabled as _mlflow_enabled
 
 from .allium_cepa_result import AlliumCepaResult
+
+_REGISTRY_MODEL_NAME = "allium-classifier"
+_REGISTRY_PRODUCTION_ALIAS = "production"
 
 _EMPTY_COLUMNS = [
     "x_min",
@@ -61,9 +65,12 @@ class AlliumCepaModel:
         self._detection_calibrator = self._load_detection_calibrator(
             self.config.detection_calibrator_path
         )
-        self.classification_model = self._load_classification_model(
-            self.config.classification_weights_path
-        )
+        if self.config.use_registry:
+            self.classification_model = self._load_from_registry()
+        else:
+            self.classification_model = self._load_classification_model(
+                self.config.classification_weights_path
+            )
 
     def _load_detection_model(self, weights_path: Path):
         if not weights_path.exists():
@@ -86,6 +93,51 @@ class AlliumCepaModel:
         if self._detection_calibrator is None:
             return conf.astype(np.float64)
         return np.clip(self._detection_calibrator.predict(conf), 0.0, 1.0)
+
+    def _load_from_registry(self) -> nn.Module:
+        """Download the @production classifier from the MLflow Model Registry and load it."""
+        if not _mlflow_enabled():
+            raise RuntimeError(
+                "use_registry=True but MLFLOW_TRACKING_URI is not set. "
+                "Set it in .env or the environment."
+            )
+        import mlflow
+
+        from allium_cepa_classifier.config.experiment_config import ModelConfig
+        from allium_cepa_classifier.training.model_builder import build_model
+
+        artifact_uri = (
+            f"models:/{_REGISTRY_MODEL_NAME}@{_REGISTRY_PRODUCTION_ALIAS}"
+            "/calibrated_classifier/classifier_calibrated.pt"
+        )
+        local_path = Path(
+            mlflow.artifacts.download_artifacts(artifact_uri=artifact_uri)
+        )
+
+        ckpt = torch.load(local_path, map_location=self._device, weights_only=False)
+        arch = ckpt.get("timm_model_name")
+        if arch is None:
+            raise ValueError(
+                f"Registry checkpoint does not contain 'timm_model_name'. "
+                "Re-train and re-promote the model."
+            )
+
+        model = build_model(ModelConfig(arch=arch)).to(self._device)
+        base_state = {
+            k[len("base_model."):]: v
+            for k, v in ckpt["model_state_dict"].items()
+            if k.startswith("base_model.")
+        }
+        model.load_state_dict(base_state)
+        model.eval()
+
+        self._temperature = torch.tensor(ckpt["temperature"], dtype=torch.float32).to(
+            self._device
+        )
+        self._image_size = tuple(ckpt.get("image_size", self.config.image_size))
+        self._imagenet_mean = ckpt.get("normalize_mean", [0.485, 0.456, 0.406])
+        self._imagenet_std = ckpt.get("normalize_std", [0.229, 0.224, 0.225])
+        return model
 
     def _load_classification_model(self, weights_path: Path) -> nn.Module:
         if not weights_path.exists():

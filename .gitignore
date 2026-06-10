@@ -49,6 +49,8 @@ temp/
 # TensorBoard / YOLO raw run output
 runs/
 experiments/*/*/yolo/
+experiments/*/*/tensorboard/
+events.out.tfevents.*
 
 # Temporary files
 tmp/

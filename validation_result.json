@@ -1,0 +1,24 @@
+{
+  "approved": true,
+  "reasons": [],
+  "new_metrics": {
+    "macro_f1": 0.8389977764551857,
+    "f1_per_class": {
+      "mitosis": 0.7105966162065895,
+      "no_mitosis": 0.9673989367037817
+    },
+    "accuracy": 0.9413992066354129,
+    "ece": 0.011873558932076334,
+    "n_samples": 5546
+  },
+  "current_metrics": {
+    "macro_f1": 0.6855442482343561,
+    "f1_per_class": {
+      "mitosis": 0.47377139701822196,
+      "no_mitosis": 0.8973170994504902
+    },
+    "accuracy": 0.8281644428416877,
+    "ece": 0.05289292783673559,
+    "n_samples": 5546
+  }
+}
