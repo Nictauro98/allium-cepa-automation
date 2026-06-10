@@ -40,6 +40,13 @@ class _NoOpRun:
         pass
 
 
+class _CalibratedCheckpointModel:
+    """Minimal pyfunc wrapper — weights are stored as an artifact, loaded via AlliumCepaModel."""
+
+    def predict(self, context, model_input):  # noqa: ARG002
+        raise NotImplementedError("Load via AlliumCepaModel, not MLflow pyfunc.")
+
+
 class _MlflowRun:
     def __init__(self, run_id: str) -> None:
         import mlflow
@@ -58,9 +65,14 @@ class _MlflowRun:
             self._mlflow.log_artifact(str(path))
 
     def log_model_file(self, local_path: Path, artifact_subdir: str) -> None:
-        """Log a .pt file under artifact_subdir/ so it can be registered in the Model Registry."""
-        if Path(local_path).exists():
-            self._mlflow.log_artifact(str(local_path), artifact_subdir)
+        """Log a .pt file as a pyfunc model so it can be registered in the Model Registry."""
+        if not Path(local_path).exists():
+            return
+        self._mlflow.pyfunc.log_model(
+            artifact_path=artifact_subdir,
+            python_model=_CalibratedCheckpointModel(),
+            artifacts={"weights": str(local_path)},
+        )
 
 
 @contextmanager

@@ -7,11 +7,27 @@ Usage:
 
 import argparse
 import logging
+import re
 from pathlib import Path
+
+import yaml
 
 from allium_cepa_classifier.config.experiment_config import ExperimentConfig
 from allium_cepa_classifier.training.mlflow_logging import run as mlflow_run
 from allium_cepa_classifier.training.trainer import run_training
+
+_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _dataset_rev() -> str | None:
+    """Extract the HuggingFace dataset SHA pinned in dvc.yaml, or None if not found."""
+    try:
+        dvc = yaml.safe_load((_ROOT / "dvc.yaml").read_text())
+        cmd = dvc["stages"]["download_dataset"]["cmd"]
+        m = re.search(r"--rev\s+([0-9a-f]{40})", cmd.replace("\n", " "))
+        return m.group(1) if m else None
+    except Exception:
+        return None
 
 
 def main():
@@ -54,13 +70,16 @@ def main():
         return
 
     with mlflow_run(run_name=f"classifier_{cfg.model.arch}") as mlctx:
-        mlctx.log_params({
+        params = {
             "arch": cfg.model.arch,
             "lr": cfg.training.lr,
             "batch_size": cfg.data.batch_size,
             "epochs": cfg.training.epochs,
             "freeze_stages": cfg.model.freeze_stages,
-        })
+        }
+        if (rev := _dataset_rev()) is not None:
+            params["dataset_rev"] = rev
+        mlctx.log_params(params)
         mlctx.log_artifact(args.config)
 
         metrics = run_training(cfg, run_dir)
