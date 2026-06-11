@@ -83,12 +83,14 @@ def main():
         mlctx.log_artifact(args.config)
 
         metrics = run_training(cfg, run_dir)
-        mlctx.log_metrics({
-            "train_acc": metrics["train_acc"],
-            "val_acc": metrics["val_acc"],
-            "test_acc": metrics["test_acc"],
-            "best_val_loss": metrics["best_val_loss"],
-        })
+        mlctx.log_metrics(
+            {
+                "train_acc": metrics["train_acc"],
+                "val_acc": metrics["val_acc"],
+                "test_acc": metrics["test_acc"],
+                "best_val_loss": metrics["best_val_loss"],
+            }
+        )
         mlctx.log_artifact(run_dir / "weights" / "classifier.pt")
 
         if not args.no_calibrate:
@@ -96,16 +98,20 @@ def main():
 
             logging.info("\n--- Calibration ---")
             cal_metrics = run_calibration(run_dir)
-            mlctx.log_metrics({
-                "ece_before": cal_metrics["ece_before"],
-                "ece_after": cal_metrics["ece_after"],
-            })
+            mlctx.log_metrics(
+                {
+                    "ece_before": cal_metrics["ece_before"],
+                    "ece_after": cal_metrics["ece_after"],
+                }
+            )
             # Log under a stable subdir so it can be registered in the MLflow Model Registry
             mlctx.log_model_file(
                 run_dir / "weights" / "classifier_calibrated.pt",
                 "calibrated_classifier",
             )
-            print(f"ECE before: {cal_metrics['ece_before']:.4f}  after: {cal_metrics['ece_after']:.4f}")
+            print(
+                f"ECE before: {cal_metrics['ece_before']:.4f}  after: {cal_metrics['ece_after']:.4f}"
+            )
             print(f"Temperature: {cal_metrics['temperature']}")
 
     # Persist the run_id so promote_model.py can register this version later

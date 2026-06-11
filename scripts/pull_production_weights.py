@@ -20,6 +20,7 @@ Environment:
   MINIO_ENDPOINT, MINIO_ROOT_USER, MINIO_ROOT_PASSWORD
   ALLIUM_BUCKET (default: allium-cepa-ml)
 """
+
 from __future__ import annotations
 
 import argparse

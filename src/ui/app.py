@@ -30,9 +30,7 @@ def _safe_font(size: int = 18):
 # -----------------------------
 # Resize helpers
 # -----------------------------
-def resize_image_and_detections(
-    image: Image.Image, detections: pd.DataFrame, target_w: int
-):
+def resize_image_and_detections(image: Image.Image, detections: pd.DataFrame, target_w: int):
     if image.width == target_w or target_w <= 0:
         return image, detections
 
@@ -90,9 +88,7 @@ def draw_annotated(
         text_h = bbox[3] - bbox[1]
         text_y = max(0, y_min - text_h - 2)
 
-        draw.rectangle(
-            [x_min, text_y, x_min + text_w + 4, text_y + text_h + 4], fill="red"
-        )
+        draw.rectangle([x_min, text_y, x_min + text_w + 4, text_y + text_h + 4], fill="red")
         draw.text(
             (x_min + 2, text_y + 2),
             label,
@@ -219,7 +215,6 @@ with col_right:
 if show_table:
     summary = compute_summary(detections)
     st.subheader(
-        f"Detections table — {summary['total']} cells "
-        f"({summary['mitotic']} mitotic) after filter"
+        f"Detections table — {summary['total']} cells ({summary['mitotic']} mitotic) after filter"
     )
     st.dataframe(detections, use_container_width=True)

@@ -1,4 +1,5 @@
 """Tests for evaluate.py metric computation — no model weights needed."""
+
 from __future__ import annotations
 
 import numpy as np

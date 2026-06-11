@@ -1,4 +1,5 @@
 """FastAPI endpoint tests — no real model, no network, no GPU."""
+
 from __future__ import annotations
 
 import io

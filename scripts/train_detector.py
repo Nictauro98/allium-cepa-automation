@@ -76,12 +76,14 @@ def main():
     settings.update({"tensorboard": cfg.tensorboard})
 
     with mlflow_run(run_name="detector_yolo") as mlctx:
-        mlctx.log_params({
-            "weights": str(cfg.weights),
-            "epochs": cfg.epochs,
-            "imgsz": cfg.imgsz,
-            "device": cfg.device,
-        })
+        mlctx.log_params(
+            {
+                "weights": str(cfg.weights),
+                "epochs": cfg.epochs,
+                "imgsz": cfg.imgsz,
+                "device": cfg.device,
+            }
+        )
         mlctx.log_artifact(args.config)
 
         model = YOLO(str(cfg.weights))
@@ -132,12 +134,16 @@ def main():
 
             logging.info("\n--- Calibration ---")
             cal_metrics = run_detection_calibration(run_dir)
-            mlctx.log_metrics({
-                "ece_before": cal_metrics["ece_before"],
-                "ece_after": cal_metrics["ece_after"],
-            })
+            mlctx.log_metrics(
+                {
+                    "ece_before": cal_metrics["ece_before"],
+                    "ece_after": cal_metrics["ece_after"],
+                }
+            )
             mlctx.log_artifact(run_dir / "weights" / "yolo_isotonic_calibrator.pkl")
-            print(f"ECE before: {cal_metrics['ece_before']:.4f}  after: {cal_metrics['ece_after']:.4f}")
+            print(
+                f"ECE before: {cal_metrics['ece_before']:.4f}  after: {cal_metrics['ece_after']:.4f}"
+            )
 
     print(f"\nDone. Artifacts in: {run_dir}")
     print(f"Detector weights copied to: {cfg.out}")

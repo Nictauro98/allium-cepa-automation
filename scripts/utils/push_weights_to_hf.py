@@ -36,7 +36,7 @@ def read_token() -> str:
         raise RuntimeError(
             "No 'weights' remote token found in .dvc/config.local. "
             "Run: dvc remote modify --local weights password <your_hf_token>"
-        )
+        ) from None
 
 
 def push(dry_run: bool = False) -> None:
