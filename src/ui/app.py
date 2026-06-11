@@ -7,9 +7,7 @@ import pandas as pd
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 
-from src.allium_cepa_classifier import AlliumCepaConfig
-from src.allium_cepa_classifier import AlliumCepaModel
-from src.allium_cepa_classifier import AlliumCepaResult
+from ui.client import API_URL, run_prediction
 
 
 # -----------------------------
@@ -41,9 +39,7 @@ def resize_image_and_detections(
     scale = target_w / image.width
     target_h = int(round(image.height * scale))
 
-    resized = image.resize(
-        (target_w, target_h), resample=Image.Resampling.LANCZOS
-    )
+    resized = image.resize((target_w, target_h), resample=Image.Resampling.LANCZOS)
 
     det = detections.copy()
     for c in ["x_min", "x_max"]:
@@ -74,9 +70,9 @@ def draw_annotated(
 
     df = detections.copy()
     if mode == "mitosis":
-        df = df[df["mitosis"] == True]
+        df = df[df["mitosis"] == True]  # noqa: E712
     elif mode == "not_mitosis":
-        df = df[df["mitosis"] == False]
+        df = df[df["mitosis"] == False]  # noqa: E712
 
     for _, row in df.iterrows():
         x_min, y_min = int(row["x_min"]), int(row["y_min"])
@@ -87,27 +83,16 @@ def draw_annotated(
         mito_txt = "mitosis" if mito is True else ("not" if mito is False else "")
         label = f"{cls_name} | {mito_txt}".strip(" |")
 
-        # bounding box
-        draw.rectangle(
-            [(x_min, y_min), (x_max, y_max)],
-            outline="red",
-            width=2,
-        )
+        draw.rectangle([(x_min, y_min), (x_max, y_max)], outline="red", width=2)
 
-        # text size
         bbox = draw.textbbox((0, 0), label, font=font)
         text_w = bbox[2] - bbox[0]
         text_h = bbox[3] - bbox[1]
-
         text_y = max(0, y_min - text_h - 2)
 
-        # background
         draw.rectangle(
-            [x_min, text_y, x_min + text_w + 4, text_y + text_h + 4],
-            fill="red",
+            [x_min, text_y, x_min + text_w + 4, text_y + text_h + 4], fill="red"
         )
-
-        # text (with stroke for readability)
         draw.text(
             (x_min + 2, text_y + 2),
             label,
@@ -121,15 +106,15 @@ def draw_annotated(
 
 
 # -----------------------------
-# Summary
+# Summary (post-filter counts)
 # -----------------------------
 def compute_summary(detections: pd.DataFrame) -> dict:
     total = int(len(detections))
     if total == 0 or "mitosis" not in detections.columns:
         return {"total": 0, "mitotic": 0, "non_mitotic": 0, "mitotic_index": 0.0}
 
-    mitotic = int((detections["mitosis"] == True).sum())
-    non_mitotic = int((detections["mitosis"] == False).sum())
+    mitotic = int((detections["mitosis"] == True).sum())  # noqa: E712
+    non_mitotic = int((detections["mitosis"] == False).sum())  # noqa: E712
     mitotic_index = (mitotic / total) * 100.0
 
     return {
@@ -141,22 +126,9 @@ def compute_summary(detections: pd.DataFrame) -> dict:
 
 
 # -----------------------------
-# Model loader
-# -----------------------------
-@st.cache_resource
-def load_model() -> AlliumCepaModel:
-    cfg = AlliumCepaConfig.from_yaml("config.yaml")
-    return AlliumCepaModel(cfg)
-
-
-# -----------------------------
 # Streamlit UI
 # -----------------------------
-st.set_page_config(
-    page_title="Allium cepa – Mitosis Detector",
-    layout="wide",
-)
-
+st.set_page_config(page_title="Allium cepa – Mitosis Detector", layout="wide")
 st.title("Allium cepa – Cell Detection & Mitosis Index")
 
 with st.sidebar:
@@ -178,24 +150,22 @@ with st.sidebar:
 
 st.write("Upload an image to run detection + mitosis classification.")
 
-uploaded = st.file_uploader(
-    "Upload image", type=["png", "jpg", "jpeg", "tif", "tiff"]
-)
+uploaded = st.file_uploader("Upload image", type=["png", "jpg", "jpeg", "tif", "tiff"])
 
 if uploaded is None:
     st.stop()
 
 image = Image.open(uploaded).convert("RGB")
 
-model = load_model()
-result: AlliumCepaResult = model.predict(image)
-
-detections = result.detections.copy()
+with st.spinner("Running inference…"):
+    try:
+        counts, detections = run_prediction(uploaded)
+    except Exception as e:
+        st.error(f"API error — is the service running at {API_URL}?\n\n{e}")
+        st.stop()
 
 if use_conf_filter and "confidence" in detections.columns:
     detections = detections[detections["confidence"] >= conf_thr].reset_index(drop=True)
-
-summary = compute_summary(detections)
 
 mode_map = {
     "Off": None,
@@ -205,11 +175,7 @@ mode_map = {
 }
 anno_mode = mode_map[anno_choice]
 
-# resize BEFORE drawing
-disp_img, disp_det = resize_image_and_detections(
-    image, detections, target_w=display_w
-)
-
+disp_img, disp_det = resize_image_and_detections(image, detections, target_w=display_w)
 font_size = max(14, display_w // 60)
 
 col_left, col_right = st.columns([1.2, 1.0], gap="large")
@@ -219,23 +185,26 @@ with col_left:
     if anno_mode is None:
         st.image(disp_img, width=display_w)
     else:
-        annotated = draw_annotated(
-            disp_img,
-            disp_det,
-            mode=anno_mode,  # type: ignore[arg-type]
-            font_size=font_size,
-        )
+        annotated = draw_annotated(disp_img, disp_det, mode=anno_mode, font_size=font_size)
         st.image(annotated, width=display_w)
 
 with col_right:
     st.subheader("Results")
 
-    a, b, c = st.columns(3)
-    a.metric("Cells", summary["total"])
-    b.metric("Mitotic", summary["mitotic"])
-    c.metric("Non-mitotic", summary["non_mitotic"])
+    # Calibrated headline — server-side, computed over ALL detections
+    st.metric("Mitotic index", f"{counts['mi']:.4f}")
+    st.caption(f"95.45% CI: [{counts['ci_lower']:.4f}, {counts['ci_upper']:.4f}]")
 
-    st.metric("Mitotic index (%)", f"{summary['mitotic_index']:.2f}")
+    a, b, c = st.columns(3)
+    a.metric("Total cells", counts["total_cells"])
+    b.metric("Mitotic", counts["mitotic_cells"])
+    c.metric("Non-mitotic", counts["non_mitotic_cells"])
+
+    if use_conf_filter:
+        st.caption(
+            f"The MI ± CI above uses all {counts['total_cells']} detections. "
+            f"The confidence filter (≥ {conf_thr:.2f}) only affects the image and table below."
+        )
 
     if download_csv:
         csv_bytes = detections.to_csv(index=False).encode("utf-8")
@@ -248,5 +217,9 @@ with col_right:
         )
 
 if show_table:
-    st.subheader("Detections table")
+    summary = compute_summary(detections)
+    st.subheader(
+        f"Detections table — {summary['total']} cells "
+        f"({summary['mitotic']} mitotic) after filter"
+    )
     st.dataframe(detections, use_container_width=True)
