@@ -1,4 +1,5 @@
 """UI HTTP client tests — no network, no Streamlit runtime."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -26,12 +27,24 @@ _CANNED_COUNTS = {
 }
 _CANNED_DETECTIONS = [
     {
-        "x_min": 10, "y_min": 10, "x_max": 40, "y_max": 40,
-        "confidence": 0.9, "class_name": "cell", "mitosis": True, "p_hat": 0.9,
+        "x_min": 10,
+        "y_min": 10,
+        "x_max": 40,
+        "y_max": 40,
+        "confidence": 0.9,
+        "class_name": "cell",
+        "mitosis": True,
+        "p_hat": 0.9,
     },
     {
-        "x_min": 50, "y_min": 50, "x_max": 80, "y_max": 80,
-        "confidence": 0.8, "class_name": "cell", "mitosis": False, "p_hat": 0.8,
+        "x_min": 50,
+        "y_min": 50,
+        "x_max": 80,
+        "y_max": 80,
+        "confidence": 0.8,
+        "class_name": "cell",
+        "mitosis": False,
+        "p_hat": 0.8,
     },
 ]
 
@@ -60,7 +73,14 @@ class TestRunPrediction:
     def test_counts_contains_all_expected_keys(self):
         with patch("ui.client.requests.post", return_value=_fake_response()):
             counts, _ = run_prediction(_uploaded())
-        for key in ("mi", "ci_lower", "ci_upper", "total_cells", "mitotic_cells", "non_mitotic_cells"):
+        for key in (
+            "mi",
+            "ci_lower",
+            "ci_upper",
+            "total_cells",
+            "mitotic_cells",
+            "non_mitotic_cells",
+        ):
             assert key in counts, f"missing key: {key}"
 
     def test_detections_has_expected_columns(self):

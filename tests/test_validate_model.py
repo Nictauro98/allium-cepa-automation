@@ -1,4 +1,5 @@
 """Tests for the validate_model gate logic — fully isolated, no network."""
+
 from __future__ import annotations
 
 import json
@@ -35,7 +36,11 @@ class TestCheckFunction:
     def test_rejects_when_per_class_f1_drops_too_much(self, sample_prod_metrics):
         new_per = dict(sample_prod_metrics["f1_per_class"])
         new_per["mitosis"] -= 0.05
-        new = {**sample_prod_metrics, "macro_f1": sample_prod_metrics["macro_f1"] + 0.02, "f1_per_class": new_per}
+        new = {
+            **sample_prod_metrics,
+            "macro_f1": sample_prod_metrics["macro_f1"] + 0.02,
+            "f1_per_class": new_per,
+        }
         cfg = ValidationConfig(min_f1_delta=0.01, per_class_tolerance=0.03)
         reasons = _check(new, sample_prod_metrics, cfg)
         assert any("mitosis" in r for r in reasons)
@@ -81,7 +86,10 @@ class TestRunValidation:
         mock_storage = MagicMock()
         mock_storage.exists.return_value = False
 
-        with patch("allium_cepa_classifier.validation.validate_model.get_storage", return_value=mock_storage):
+        with patch(
+            "allium_cepa_classifier.validation.validate_model.get_storage",
+            return_value=mock_storage,
+        ):
             result = run_validation(report_path)
 
         assert result.approved is True
@@ -96,7 +104,10 @@ class TestRunValidation:
         mock_storage.exists.return_value = True
         mock_storage.read_text.return_value = json.dumps(sample_prod_metrics)
 
-        with patch("allium_cepa_classifier.validation.validate_model.get_storage", return_value=mock_storage):
+        with patch(
+            "allium_cepa_classifier.validation.validate_model.get_storage",
+            return_value=mock_storage,
+        ):
             result = run_validation(report_path)
 
         assert result.approved is True
@@ -111,7 +122,10 @@ class TestRunValidation:
         mock_storage.exists.return_value = True
         mock_storage.read_text.return_value = json.dumps(sample_prod_metrics)
 
-        with patch("allium_cepa_classifier.validation.validate_model.get_storage", return_value=mock_storage):
+        with patch(
+            "allium_cepa_classifier.validation.validate_model.get_storage",
+            return_value=mock_storage,
+        ):
             result = run_validation(report_path)
 
         assert result.approved is False
@@ -124,7 +138,10 @@ class TestRunValidation:
         mock_storage = MagicMock()
         mock_storage.exists.return_value = False
 
-        with patch("allium_cepa_classifier.validation.validate_model.get_storage", return_value=mock_storage):
+        with patch(
+            "allium_cepa_classifier.validation.validate_model.get_storage",
+            return_value=mock_storage,
+        ):
             result = run_validation(report_path)
 
         assert isinstance(result, ValidationResult)

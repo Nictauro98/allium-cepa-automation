@@ -1,4 +1,5 @@
 """Tests for the storage provider factory — no network, mocks fsspec."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -25,7 +26,7 @@ class TestGetStorage:
 
         with patch("allium_cepa_classifier.providers.storage.fsspec.filesystem") as mock_fs:
             mock_fs.return_value = MagicMock()
-            storage = get_storage()
+            get_storage()
 
         call_kwargs = mock_fs.call_args
         assert call_kwargs[1]["client_kwargs"]["endpoint_url"] == "http://localhost:9000"
@@ -36,7 +37,7 @@ class TestGetStorage:
 
         with patch("allium_cepa_classifier.providers.storage.fsspec.filesystem") as mock_fs:
             mock_fs.return_value = MagicMock()
-            storage = get_storage()
+            get_storage()
 
         call_kwargs = mock_fs.call_args
         assert call_kwargs[1]["client_kwargs"]["endpoint_url"] == "http://minio:9000"
@@ -46,7 +47,7 @@ class TestGetStorage:
 
         with patch("allium_cepa_classifier.providers.storage.fsspec.filesystem") as mock_fs:
             mock_fs.return_value = MagicMock()
-            storage = get_storage()
+            get_storage()
 
         call_kwargs = mock_fs.call_args
         assert "client_kwargs" not in call_kwargs[1]

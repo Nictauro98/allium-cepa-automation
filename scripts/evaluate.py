@@ -15,6 +15,7 @@ Usage (direct weights file — arch read from checkpoint; pass --arch for pre-Pl
 Test set source: datasets/crops/binary_classifier/test (ImageFolder).
 Future (Plan D): swap for s3://dataset/test_fixed/ via the storage provider.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -98,11 +99,13 @@ def run_evaluation(weights_path: Path, test_dir: Path, arch: str | None = None) 
     std = ckpt.get("normalize_std", [0.229, 0.224, 0.225])
     idx_to_class = {v: k for k, v in ckpt["class_to_idx"].items()}
 
-    transform = transforms.Compose([
-        transforms.Resize(image_size),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=mean, std=std),
-    ])
+    transform = transforms.Compose(
+        [
+            transforms.Resize(image_size),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=mean, std=std),
+        ]
+    )
 
     test_ds = datasets.ImageFolder(test_dir, transform=transform)
     log.info(f"Test samples: {len(test_ds)}, class mapping: {test_ds.class_to_idx}")

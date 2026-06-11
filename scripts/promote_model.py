@@ -19,6 +19,7 @@ Usage:
 To roll back a promotion:
   mlflow aliases set --model-name allium-classifier --alias production --version <prev-version>
 """
+
 from __future__ import annotations
 
 import argparse
@@ -42,9 +43,7 @@ _PRODUCTION_KEY = "models/production/metrics.json"
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Promote validated champion to MLflow production."
-    )
+    parser = argparse.ArgumentParser(description="Promote validated champion to MLflow production.")
     parser.add_argument(
         "--dry-run",
         action="store_true",

@@ -110,9 +110,7 @@ class AlliumCepaModel:
             f"models:/{_REGISTRY_MODEL_NAME}@{_REGISTRY_PRODUCTION_ALIAS}"
             "/calibrated_classifier/classifier_calibrated.pt"
         )
-        local_path = Path(
-            mlflow.artifacts.download_artifacts(artifact_uri=artifact_uri)
-        )
+        local_path = Path(mlflow.artifacts.download_artifacts(artifact_uri=artifact_uri))
 
         ckpt = torch.load(local_path, map_location=self._device, weights_only=False)
         arch = ckpt.get("timm_model_name")
@@ -124,16 +122,14 @@ class AlliumCepaModel:
 
         model = build_model(ModelConfig(arch=arch)).to(self._device)
         base_state = {
-            k[len("base_model."):]: v
+            k[len("base_model.") :]: v
             for k, v in ckpt["model_state_dict"].items()
             if k.startswith("base_model.")
         }
         model.load_state_dict(base_state)
         model.eval()
 
-        self._temperature = torch.tensor(ckpt["temperature"], dtype=torch.float32).to(
-            self._device
-        )
+        self._temperature = torch.tensor(ckpt["temperature"], dtype=torch.float32).to(self._device)
         self._image_size = tuple(ckpt.get("image_size", self.config.image_size))
         self._imagenet_mean = ckpt.get("normalize_mean", [0.485, 0.456, 0.406])
         self._imagenet_std = ckpt.get("normalize_std", [0.229, 0.224, 0.225])

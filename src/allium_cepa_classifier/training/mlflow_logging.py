@@ -5,6 +5,7 @@ Loads MLFLOW_TRACKING_URI from a project-root .env file automatically, so no
 manual export is needed. No-ops silently when the var is absent (e.g. CI without
 Docker), so the codebase works without MLflow running.
 """
+
 from __future__ import annotations
 
 import os

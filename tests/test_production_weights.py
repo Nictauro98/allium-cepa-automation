@@ -1,4 +1,5 @@
 """Weight-loader tests — no network, no MinIO, fake storage stub writes dummy files."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -18,7 +19,9 @@ class TestEnsureProductionWeights:
     def test_creates_cache_dir_if_missing(self, tmp_path):
         cache = tmp_path / "new_cache"
         cfg = ProductionConfig(weights_cache_dir=cache)
-        with patch("allium_cepa_classifier.serving.weights.get_storage", return_value=_storage_stub()):
+        with patch(
+            "allium_cepa_classifier.serving.weights.get_storage", return_value=_storage_stub()
+        ):
             ensure_production_weights(cfg)
         assert cache.is_dir()
 
@@ -42,7 +45,9 @@ class TestEnsureProductionWeights:
 
     def test_returns_allium_cepa_config_with_cache_paths(self, tmp_path):
         cfg = ProductionConfig(weights_cache_dir=tmp_path)
-        with patch("allium_cepa_classifier.serving.weights.get_storage", return_value=_storage_stub()):
+        with patch(
+            "allium_cepa_classifier.serving.weights.get_storage", return_value=_storage_stub()
+        ):
             result = ensure_production_weights(cfg)
         assert isinstance(result, AlliumCepaConfig)
         assert result.detection_weights_path == tmp_path / "object_detection.pt"
@@ -51,6 +56,8 @@ class TestEnsureProductionWeights:
 
     def test_returns_config_with_cpu_enabled(self, tmp_path):
         cfg = ProductionConfig(weights_cache_dir=tmp_path)
-        with patch("allium_cepa_classifier.serving.weights.get_storage", return_value=_storage_stub()):
+        with patch(
+            "allium_cepa_classifier.serving.weights.get_storage", return_value=_storage_stub()
+        ):
             result = ensure_production_weights(cfg)
         assert result.use_cpu is True

@@ -14,6 +14,7 @@ The script creates the Space if it does not exist, then uploads:
 Required Space secrets (set manually in HF Space settings):
   ALLIUM_STORAGE, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ALLIUM_BUCKET
 """
+
 from __future__ import annotations
 
 import argparse
@@ -69,11 +70,15 @@ def deploy(space_id: str, *, private: bool = False) -> None:
 
     url = f"https://huggingface.co/spaces/{space_id}"
     print(f"\nDeployed → {url}")
-    print("Remember to set Space secrets: ALLIUM_STORAGE, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ALLIUM_BUCKET")
+    print(
+        "Remember to set Space secrets: ALLIUM_STORAGE, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ALLIUM_BUCKET"
+    )
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("space_id", help="HF Space ID, e.g. Nictauro98/allium-cepa")
     parser.add_argument("--private", action="store_true", help="Create a private Space")
     args = parser.parse_args()

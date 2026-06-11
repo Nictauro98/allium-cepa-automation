@@ -8,6 +8,7 @@ Production baseline is read via the storage provider:
   key = "models/production/metrics.json"
 If absent (first run), the new model is auto-approved and a warning is emitted.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -55,17 +56,13 @@ def _check(
         new_val = new_per.get(cls, 0.0)
         drop = prod_val - new_val
         if drop > cfg.per_class_tolerance:
-            reasons.append(
-                f"F1[{cls}] dropped {drop:.4f} > tolerance {cfg.per_class_tolerance}"
-            )
+            reasons.append(f"F1[{cls}] dropped {drop:.4f} > tolerance {cfg.per_class_tolerance}")
 
     new_ece = new.get("ece", 0.0)
     prod_ece = prod.get("ece", 0.0)
     ece_increase = new_ece - prod_ece
     if ece_increase > cfg.ece_tolerance:
-        reasons.append(
-            f"ECE increased {ece_increase:.4f} > tolerance {cfg.ece_tolerance}"
-        )
+        reasons.append(f"ECE increased {ece_increase:.4f} > tolerance {cfg.ece_tolerance}")
 
     return reasons
 
