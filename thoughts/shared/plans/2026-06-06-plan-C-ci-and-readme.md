@@ -95,8 +95,8 @@ jobs:
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] Workflow file is valid YAML: `uv run python -c "import yaml,sys; yaml.safe_load(open('.github/workflows/ci.yml'))"`
-- [ ] The same commands pass locally: `uv run ruff check . && uv run ruff format --check . && uv run pytest`
+- [x] Workflow file is valid YAML: `uv run python -c "import yaml,sys; yaml.safe_load(open('.github/workflows/ci.yml'))"`
+- [x] The same commands pass locally: `uv run ruff check . && uv run ruff format --check . && uv run pytest`
 - [ ] A push to a branch triggers the workflow and it goes green (observed in the Actions tab).
 
 #### Manual Verification:
@@ -138,7 +138,7 @@ A full rewrite. The current dev-doc content is moved below a recruiter-oriented 
 
 #### Automated Verification:
 - [ ] Markdown links resolve: a link-check (e.g. `uv run python` script walking relative links) reports no broken local paths.
-- [ ] Referenced images exist in `docs/screenshots/`.
+- [x] Referenced images exist in `docs/screenshots/`.
 
 #### Manual Verification:
 - [ ] Rendered on GitHub: badges resolve, demo link works, diagram and screenshots display.
@@ -167,6 +167,7 @@ Capture and optimize the images the README references.
 #### Manual Verification:
 - [ ] Screenshots are legible at the size GitHub renders them inline.
 - [ ] They show *this* project's real UIs (not placeholders).
+  *Note: `docs/screenshots/` directory created; actual PNGs (demo.png, mlflow_runs.png) to be captured and added in Phase 3.*
 
 ---
 
