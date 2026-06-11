@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from allium_cepa_classifier.config.validation_config import ValidationConfig
-from allium_cepa_classifier.validation.validate_model import ValidationResult, _check, run_validation
+from allium_cepa_classifier.validation.validate_model import (
+    ValidationResult,
+    _check,
+    run_validation,
+)
 
 
 class TestCheckFunction:

@@ -1,0 +1,21 @@
+.git/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Large data dirs — mount as volumes in compose
+datasets/
+experiments/
+models/
+
+# Dev artifacts
+notebooks/
+thoughts/
+dvclive/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets
+.env

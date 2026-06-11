@@ -29,6 +29,7 @@ logs/
 *.keras
 *.pt
 *.pth
+*.pkl
 *.ckpt
 *.ckpt.index
 *.ckpt.data-*

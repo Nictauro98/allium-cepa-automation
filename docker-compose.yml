@@ -54,6 +54,45 @@ services:
       createbuckets:
         condition: service_completed_successfully
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      ALLIUM_STORAGE: ${ALLIUM_STORAGE:-minio}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      ALLIUM_BUCKET: ${ALLIUM_BUCKET}
+    volumes:
+      - allium_weights:/tmp/allium_weights
+    depends_on:
+      createbuckets:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+      start_period: 180s
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["uv", "run", "streamlit", "run", "src/ui/app.py",
+              "--server.port", "8501", "--server.address", "0.0.0.0"]
+    ports:
+      - "8501:8501"
+    environment:
+      API_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+
 volumes:
   minio_data:
   mlflow_data:
+  allium_weights:

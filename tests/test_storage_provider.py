@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from allium_cepa_classifier.providers.factory import get_storage
 from allium_cepa_classifier.providers.storage import FsspecStorage
 
