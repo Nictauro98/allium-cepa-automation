@@ -118,7 +118,7 @@ class AlliumCepaModel:
         arch = ckpt.get("timm_model_name")
         if arch is None:
             raise ValueError(
-                f"Registry checkpoint does not contain 'timm_model_name'. "
+                "Registry checkpoint does not contain 'timm_model_name'. "
                 "Re-train and re-promote the model."
             )
 

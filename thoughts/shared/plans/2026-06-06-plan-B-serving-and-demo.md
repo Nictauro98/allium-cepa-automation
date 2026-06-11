@@ -131,12 +131,12 @@ def ensure_production_weights(cfg: ProductionConfig) -> AlliumCepaConfig:
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] `uv run python -c "from allium_cepa_classifier.config import ProductionConfig; ProductionConfig()"`
-- [ ] `uv run python -c "from allium_cepa_classifier.serving.weights import ensure_production_weights"`
-- [ ] Lint passes: `uv run ruff check .`
+- [x] `uv run python -c "from allium_cepa_classifier.config import ProductionConfig; ProductionConfig()"`
+- [x] `uv run python -c "from allium_cepa_classifier.serving.weights import ensure_production_weights"`
+- [x] Lint passes: `uv run ruff check .`
 
 #### Manual Verification:
-- [ ] With MinIO up and the three files present under `models/production/`, `ensure_production_weights(ProductionConfig())` populates the cache dir and returns a valid `AlliumCepaConfig`.
+- [x] With MinIO up and the three files present under `models/production/`, `ensure_production_weights(ProductionConfig())` populates the cache dir and returns a valid `AlliumCepaConfig`.
 
 ---
 
@@ -206,9 +206,9 @@ async def predict(file: UploadFile = File(...)) -> dict:
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] `uv run python -c "import app.api"` imports without building the model (lifespan not triggered)
+- [x] `uv run python -c "import app.api"` imports without building the model (lifespan not triggered)
 - [ ] `uv run pytest tests/test_api.py` passes (Phase 5) — `/predict` with a fixture image, model mocked; asserts both `counts` and `detections` keys
-- [ ] Lint passes: `uv run ruff check .`
+- [x] Lint passes: `uv run ruff check .`
 
 #### Manual Verification:
 - [ ] `uv run uvicorn app.api:app` then `curl -F "file=@<sample>.png" localhost:8000/predict` returns JSON with `counts.mitotic_index`/`ci_lower`/`ci_upper` and a non-empty `detections` array.
@@ -274,9 +274,9 @@ async def predict(file: UploadFile = File(...)) -> dict:
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] Syntax check: `uv run python -c "import ast; ast.parse(open('src/ui/app.py').read())"`
-- [ ] No in-process model import remains: `grep -n "AlliumCepaModel\|from_yaml\|cache_resource" src/ui/app.py` returns nothing
-- [ ] Lint passes: `uv run ruff check .`
+- [x] Syntax check: `uv run python -c "import ast; ast.parse(open('src/ui/app.py').read())"`
+- [x] No in-process model import remains: `grep -n "AlliumCepaModel\|from_yaml\|cache_resource" src/ui/app.py` returns nothing
+- [x] Lint passes: `uv run ruff check .`
 
 #### Manual Verification:
 - [ ] With the API running, `uv run streamlit run src/ui/app.py`, upload a sample → calibrated MI + CI headline renders; annotation modes, confidence slider, table, and CSV download all still work off the API's detections.
