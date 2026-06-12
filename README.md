@@ -5,7 +5,7 @@ Continuous-training, human-in-the-loop CV pipeline for mitotic-index estimation 
 [![CI](https://github.com/Nictauro98/allium-cepa-automation/actions/workflows/ci.yml/badge.svg)](https://github.com/Nictauro98/allium-cepa-automation/actions/workflows/ci.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/downloads/release/python-3120/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-HF%20Spaces-orange)](https://huggingface.co/spaces/Nictauro98/allium-cepa)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-HF%20Spaces-orange)](https://huggingface.co/spaces/ntaurozzi/allium-cepa)
 
 ---
 
@@ -13,7 +13,7 @@ Continuous-training, human-in-the-loop CV pipeline for mitotic-index estimation 
 
 Try the pipeline on your own microscopy image — no local setup required.
 
-**[huggingface.co/spaces/Nictauro98/allium-cepa](https://huggingface.co/spaces/Nictauro98/allium-cepa)**
+**[huggingface.co/spaces/ntaurozzi/allium-cepa](https://huggingface.co/spaces/ntaurozzi/allium-cepa)**
 
 ![Demo screenshot](docs/screenshots/demo.png)
 
