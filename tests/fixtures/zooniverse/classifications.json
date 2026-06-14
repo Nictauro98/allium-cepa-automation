@@ -1,0 +1,191 @@
+[
+  {
+    "subject_id": "sub001",
+    "annotation_id": "ann001",
+    "split": "train",
+    "value": "prophase",
+    "created_at": "2026-06-10T12:00:00Z"
+  },
+  {
+    "subject_id": "sub001",
+    "annotation_id": "ann001",
+    "split": "train",
+    "value": "prophase",
+    "created_at": "2026-06-10T12:05:00Z"
+  },
+  {
+    "subject_id": "sub001",
+    "annotation_id": "ann001",
+    "split": "train",
+    "value": "prophase",
+    "created_at": "2026-06-10T12:10:00Z"
+  },
+  {
+    "subject_id": "sub002",
+    "annotation_id": "ann002",
+    "split": "train",
+    "value": "metaphase",
+    "created_at": "2026-06-10T12:00:00Z"
+  },
+  {
+    "subject_id": "sub002",
+    "annotation_id": "ann002",
+    "split": "train",
+    "value": "metaphase",
+    "created_at": "2026-06-10T12:05:00Z"
+  },
+  {
+    "subject_id": "sub002",
+    "annotation_id": "ann002",
+    "split": "train",
+    "value": "interphase",
+    "created_at": "2026-06-10T12:10:00Z"
+  },
+  {
+    "subject_id": "sub003",
+    "annotation_id": "ann003",
+    "split": "train",
+    "value": "anaphase",
+    "created_at": "2026-06-10T12:00:00Z"
+  },
+  {
+    "subject_id": "sub003",
+    "annotation_id": "ann003",
+    "split": "train",
+    "value": "anaphase",
+    "created_at": "2026-06-10T12:05:00Z"
+  },
+  {
+    "subject_id": "sub003",
+    "annotation_id": "ann003",
+    "split": "train",
+    "value": "anaphase",
+    "created_at": "2026-06-10T12:10:00Z"
+  },
+  {
+    "subject_id": "sub004",
+    "annotation_id": "ann004",
+    "split": "train",
+    "value": "telophase",
+    "created_at": "2026-06-10T12:00:00Z"
+  },
+  {
+    "subject_id": "sub004",
+    "annotation_id": "ann004",
+    "split": "train",
+    "value": "telophase",
+    "created_at": "2026-06-10T12:05:00Z"
+  },
+  {
+    "subject_id": "sub004",
+    "annotation_id": "ann004",
+    "split": "train",
+    "value": "telophase",
+    "created_at": "2026-06-10T12:10:00Z"
+  },
+  {
+    "subject_id": "sub005",
+    "annotation_id": "ann005",
+    "split": "train",
+    "value": "chromosomal_aberration",
+    "created_at": "2026-06-10T12:00:00Z"
+  },
+  {
+    "subject_id": "sub005",
+    "annotation_id": "ann005",
+    "split": "train",
+    "value": "chromosomal_aberration",
+    "created_at": "2026-06-10T12:05:00Z"
+  },
+  {
+    "subject_id": "sub005",
+    "annotation_id": "ann005",
+    "split": "train",
+    "value": "chromosomal_aberration",
+    "created_at": "2026-06-10T12:10:00Z"
+  },
+  {
+    "subject_id": "sub006",
+    "annotation_id": "ann006",
+    "split": "train",
+    "value": "interphase",
+    "created_at": "2026-06-10T12:00:00Z"
+  },
+  {
+    "subject_id": "sub006",
+    "annotation_id": "ann006",
+    "split": "train",
+    "value": "interphase",
+    "created_at": "2026-06-10T12:05:00Z"
+  },
+  {
+    "subject_id": "sub006",
+    "annotation_id": "ann006",
+    "split": "train",
+    "value": "interphase",
+    "created_at": "2026-06-10T12:10:00Z"
+  },
+  {
+    "subject_id": "sub007",
+    "annotation_id": "ann007",
+    "split": "train",
+    "value": "indeterminate",
+    "created_at": "2026-06-10T12:00:00Z"
+  },
+  {
+    "subject_id": "sub007",
+    "annotation_id": "ann007",
+    "split": "train",
+    "value": "indeterminate",
+    "created_at": "2026-06-10T12:05:00Z"
+  },
+  {
+    "subject_id": "sub007",
+    "annotation_id": "ann007",
+    "split": "train",
+    "value": "indeterminate",
+    "created_at": "2026-06-10T12:10:00Z"
+  },
+  {
+    "subject_id": "sub008",
+    "annotation_id": "ann008",
+    "split": "train",
+    "value": "not_a_cell",
+    "created_at": "2026-06-10T12:00:00Z"
+  },
+  {
+    "subject_id": "sub008",
+    "annotation_id": "ann008",
+    "split": "train",
+    "value": "not_a_cell",
+    "created_at": "2026-06-10T12:05:00Z"
+  },
+  {
+    "subject_id": "sub008",
+    "annotation_id": "ann008",
+    "split": "train",
+    "value": "not_a_cell",
+    "created_at": "2026-06-10T12:10:00Z"
+  },
+  {
+    "subject_id": "sub_low",
+    "annotation_id": "ann_low",
+    "split": "train",
+    "value": "prophase",
+    "created_at": "2026-06-10T12:00:00Z"
+  },
+  {
+    "subject_id": "sub_low",
+    "annotation_id": "ann_low",
+    "split": "train",
+    "value": "metaphase",
+    "created_at": "2026-06-10T12:05:00Z"
+  },
+  {
+    "subject_id": "sub_low",
+    "annotation_id": "ann_low",
+    "split": "train",
+    "value": "interphase",
+    "created_at": "2026-06-10T12:10:00Z"
+  }
+]

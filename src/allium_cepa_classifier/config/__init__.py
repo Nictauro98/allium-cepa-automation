@@ -8,6 +8,7 @@ from .experiment_config import ExperimentConfig
 from .production_config import ProductionConfig
 from .training_config import TrainingConfig
 from .validation_config import ValidationConfig
+from .zooniverse_config import ZooniverseConfig
 
 __all__ = [
     "AlliumCepaConfig",
@@ -16,4 +17,5 @@ __all__ = [
     "ProductionConfig",
     "TrainingConfig",
     "ValidationConfig",
+    "ZooniverseConfig",
 ]

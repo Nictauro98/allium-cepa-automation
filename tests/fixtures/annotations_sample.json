@@ -1,0 +1,42 @@
+{
+  "images": [
+    {"id": "img001", "file_name": "image001.jpg", "width": 1280, "height": 960},
+    {"id": "img002", "file_name": "image002.jpg", "width": 1280, "height": 960}
+  ],
+  "annotations": [
+    {
+      "id": "ann001",
+      "image_id": "img001",
+      "bbox": [100, 200, 50, 50],
+      "attributes": {"division": 1, "phase": null, "source": "human"}
+    },
+    {
+      "id": "ann002",
+      "image_id": "img001",
+      "bbox": [200, 300, 45, 45],
+      "attributes": {"division": 0, "phase": null, "source": "human"}
+    },
+    {
+      "id": "ann003",
+      "image_id": "img002",
+      "bbox": [300, 100, 60, 60],
+      "attributes": {"division": null, "pending": true, "source": "auto"}
+    },
+    {
+      "id": "ann004",
+      "image_id": "img002",
+      "bbox": [400, 200, 55, 55],
+      "attributes": {"division": null, "pending": true, "source": "auto"}
+    },
+    {
+      "id": "ann_low",
+      "image_id": "img002",
+      "bbox": [500, 300, 40, 40],
+      "attributes": {"division": null, "pending": true, "source": "auto"}
+    }
+  ],
+  "categories": [
+    {"id": 0, "name": "no_mitosis"},
+    {"id": 1, "name": "mitosis"}
+  ]
+}

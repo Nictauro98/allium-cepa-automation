@@ -92,7 +92,59 @@ services:
       api:
         condition: service_healthy
 
+  airflow:
+    image: apache/airflow:2.9.3-python3.12
+    depends_on:
+      createbuckets:
+        condition: service_completed_successfully
+    environment:
+      # Core
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY:-changeme}
+      # Provider switches (all default to mock — flip to real with secrets)
+      ALLIUM_LABELING: ${ALLIUM_LABELING:-mock}
+      ALLIUM_DRIVE: ${ALLIUM_DRIVE:-mock}
+      ALLIUM_HUB: ${ALLIUM_HUB:-mock}
+      ALLIUM_STORAGE: ${ALLIUM_STORAGE:-minio}
+      ALLIUM_BUCKET: ${ALLIUM_BUCKET}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      # Real provider secrets (all optional; mocks need none)
+      ZOONIVERSE_USERNAME: ${ZOONIVERSE_USERNAME:-}
+      ZOONIVERSE_PASSWORD: ${ZOONIVERSE_PASSWORD:-}
+      ZOONIVERSE_PROJECT_ID: ${ZOONIVERSE_PROJECT_ID:-}
+      GOOGLE_DRIVE_CREDENTIALS_PATH: ${GOOGLE_DRIVE_CREDENTIALS_PATH:-}
+      GOOGLE_DRIVE_FOLDER_ID: ${GOOGLE_DRIVE_FOLDER_ID:-}
+      HF_TOKEN: ${HF_TOKEN:-}
+      HF_DATASET_REPO: ${HF_DATASET_REPO:-}
+      HF_SPACE_ID: ${HF_SPACE_ID:-}
+    volumes:
+      - ./dags:/opt/airflow/dags:ro
+      - airflow_db:/opt/airflow
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "
+        airflow db migrate &&
+        airflow users create --username admin --password admin
+          --firstname Admin --lastname User --role Admin --email admin@example.com
+          || true &&
+        airflow webserver &
+        airflow scheduler
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 60s
+
 volumes:
   minio_data:
   mlflow_data:
   allium_weights:
+  airflow_db:

@@ -36,6 +36,15 @@ dependencies = [
 ]
 
 [dependency-groups]
+ingestion = [
+    # Zooniverse
+    "panoptes-client>=1.6.0",
+    # Google Drive
+    "google-api-python-client>=2.130.0",
+    "google-auth>=2.29.0",
+    # Airflow (pinned major; constraints file enforces exact transitive pins)
+    "apache-airflow>=2.9.0,<3.0",
+]
 serving = [
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.29.0",
@@ -97,7 +106,7 @@ indent-style = "space"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--cov=src --cov-report=term-missing"
-pythonpath = ["src", "."]
+pythonpath = ["src", ".", "dags"]
 filterwarnings = [
     "ignore::starlette.testclient.StarletteDeprecationWarning",
     "ignore::FutureWarning:torch.cuda",
